@@ -1,44 +1,100 @@
-# Environment & Secrets
+# ==============================================================================
+# NewsBias Production .gitignore
+# Ensures ONLY clean, required source code and assets are tracked in Git.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Secrets, Keys & Credentials (CRITICAL)
+# ------------------------------------------------------------------------------
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+*.pub
+*.cert
+*.crt
+*.p12
+*.pfx
+*.pkcs12
+*.jks
+*.keystore
+google-services.json
+.aws/
+.azure/
+.gcp/
 
-# Virtual Environment
+# ------------------------------------------------------------------------------
+# Python & Virtual Environments
+# ------------------------------------------------------------------------------
 .venv/
 venv/
 ENV/
 env/
-
-# Python Cache & Bytecode
-__pycache__/
+.Python
 *.py[cod]
 *$py.class
 *.so
-.pytest_cache/
-.coverage
-htmlcov/
-*.egg-info/
-dist/
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Machine Learning & Large Binaries (exceeds GitHub limits)
+# ------------------------------------------------------------------------------
+# Machine Learning Weights & Large Binaries (Hosted on Hugging Face Hub)
+# ------------------------------------------------------------------------------
 data/
 models/
 results/
 *.pt
+*.pth
 *.bin
 *.safetensors
 *.onnx
 *.h5
 *.tflite
+*.ckpt
+*.joblib
+*.pkl
+*.pickle
+*.parquet
+*.arrow
+
+# ------------------------------------------------------------------------------
+# Databases & Transient State
+# ------------------------------------------------------------------------------
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
 *.sqlite
 *.sqlite3
+*.rdb
 
-# Android / Gradle Build Artifacts
+# ------------------------------------------------------------------------------
+# HuggingFace & Framework Caches
+# ------------------------------------------------------------------------------
+.cache/
+hf_cache/
+torch_cache/
+transformers_cache/
+
+# ------------------------------------------------------------------------------
+# Android & Gradle Build Artifacts
+# ------------------------------------------------------------------------------
 .gradle/
 android/.gradle/
 android/build/
@@ -48,21 +104,58 @@ android/.kotlin/
 android/local.properties
 android/*.iml
 android/app/*.iml
+android/captures/
+captures/
 *.apk
 *.aab
 *.ap_
-captures/
+*.hprof
 
-# IDE & Operating System Artifacts
+# ------------------------------------------------------------------------------
+# Testing, Coverage & Linters
+# ------------------------------------------------------------------------------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+nosetests.xml
+
+# ------------------------------------------------------------------------------
+# IDE, Editor & Operating System Artifacts
+# ------------------------------------------------------------------------------
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
-.DS_Store
+*.bak
+*.tmp
+*.temp
+*.sublime-workspace
+*.sublime-project
+*.suo
+*.user
+*.userosv
+
+# Windows OS
 Thumbs.db
 ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
 
-# Scratch & Temporary Logs
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ------------------------------------------------------------------------------
+# Scratch Files, Logs & Process IDs
+# ------------------------------------------------------------------------------
 scratch/
 *.log
+*.pid
