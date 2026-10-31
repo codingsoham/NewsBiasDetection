@@ -168,7 +168,7 @@ def predict_text(text: str, source: str | None = None) -> dict[str, float]:
     clean_text = clean_text_for_inference(text)
     tok, m = _model()
     dev = next(m.parameters()).device
-    x = tok(clean_text, return_tensors='pt', truncation=True, max_length=512)
+    x = tok(clean_text, return_tensors='pt', truncation=True, max_length=160)
     x = {k: v.to(dev) for k, v in x.items()}
     with torch.no_grad():
         logits = m(**x).logits
@@ -183,7 +183,7 @@ def predict_text(text: str, source: str | None = None) -> dict[str, float]:
 def predict_batch(
     texts: list[str],
     sources: list[str | None] | None = None,
-    batch_size: int = 64
+    batch_size: int = 8
 ) -> list[dict[str, float]]:
     import torch
     if not texts:
@@ -203,7 +203,7 @@ def predict_batch(
     with torch.no_grad():
         for i in range(0, len(clean_texts), batch_size):
             batch = clean_texts[i : i + batch_size]
-            x = tok(batch, padding=True, truncation=True, max_length=512, return_tensors='pt')
+            x = tok(batch, padding=True, truncation=True, max_length=160, return_tensors='pt')
             x = {k: v.to(dev) for k, v in x.items()}
             logits = m(**x).logits
             probs = torch.softmax(logits / t, dim=1).tolist()

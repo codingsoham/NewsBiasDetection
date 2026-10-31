@@ -188,7 +188,7 @@ def predict_pending(c: sqlite3.Connection) -> int:
 
     texts = [build_clean_evaluation_text(r['title'], r['snippet']) for r in unpredicted]
     sources = [r['source'] for r in unpredicted]
-    predictions = predict_batch(texts, sources=sources, batch_size=64)
+    predictions = predict_batch(texts, sources=sources, batch_size=8)
 
     records = [
         (
@@ -235,7 +235,7 @@ def cluster_stories(c: sqlite3.Connection, threshold: float = 0.68, min_keyword_
 
     model = _embedding_model()
     texts = [(r['title'] or '') + ' ' + (r['snippet'] or '') for r in rows]
-    vectors = model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
+    vectors = model.encode(texts, normalize_embeddings=True, show_progress_bar=False, batch_size=16)
 
     groups: list[dict] = []
     for r, v in zip(rows, vectors):
