@@ -164,7 +164,7 @@ def fetch_live_rss(c: sqlite3.Connection) -> int:
 
     if to_insert:
         c.executemany(
-            """INSERT INTO articles (source, url, normalized_url, title, snippet, text, content_hash, published_at, fetched_at)
+            """INSERT OR IGNORE INTO articles (source, url, normalized_url, title, snippet, text, content_hash, published_at, fetched_at)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             to_insert
         )
@@ -283,7 +283,7 @@ def cluster_stories(c: sqlite3.Connection, threshold: float = 0.68, min_keyword_
         cur = c.execute("INSERT INTO stories (title) VALUES (?)", (g['rows'][0]['title'],))
         story_id = cur.lastrowid
         links = [(story_id, r['id']) for r in g['rows']]
-        c.executemany("INSERT INTO story_articles (story_id, article_id) VALUES (?, ?)", links)
+        c.executemany("INSERT OR IGNORE INTO story_articles (story_id, article_id) VALUES (?, ?)", links)
         total_stories += 1
         total_links += len(links)
 
