@@ -17,10 +17,10 @@ NewsBias monitors live feeds from major Indian outlets, clusters them into multi
 
 ## 📱 App Showcase
 
-| 📰 Live Multi-Source Feed | 🔍 Deep Perspective Comparison | ℹ️ Sourcing Rigor & Methodology |
-| :---: | :---: | :---: |
-| ![Live Feed](docs/screenshots/feed_live.png) | ![Story Detail](docs/screenshots/story_detail.png) | ![About Sheet](docs/screenshots/about_sheet.png) |
-| *Real-time category filtering (`All`, `Politics`, `Civic & Factual`, `Judiciary & Law`), multi-source badges, and stacked bias breakdown bars.* | *Side-by-side outlet perspective comparison, editorial track records, and sourcing rigor tiers.* | *Interactive transparency sheet explaining calibration temperature ($T=1.20$), attribution decoupling, and sourcing rigor tiers.* |
+| 🚀 Branded Startup Splash | 📰 Live Multi-Source Feed | 🔍 Deep Perspective Comparison | ℹ️ Sourcing Rigor & Methodology |
+| :---: | :---: | :---: | :---: |
+| ![Splash Screen](docs/screenshots/splash_screen.png) | ![Live Feed](docs/screenshots/feed_live.png) | ![Story Detail](docs/screenshots/story_detail.png) | ![About Sheet](docs/screenshots/about_sheet.png) |
+| *Zero white-flash branded window launch with spring-animated emblem and tri-color perspective spectrum.* | *Real-time category filtering (`All`, `Politics`, `Civic & Factual`, `Judiciary & Law`), multi-source badges, and stacked bias breakdown bars.* | *Side-by-side outlet perspective comparison, editorial track records, and sourcing rigor tiers.* | *Interactive transparency sheet explaining calibration temperature ($T=1.20$), attribution decoupling, and sourcing rigor tiers.* |
 
 ---
 
