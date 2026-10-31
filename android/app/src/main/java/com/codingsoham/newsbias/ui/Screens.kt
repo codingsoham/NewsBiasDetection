@@ -1114,19 +1114,19 @@ private fun InfoSheet(onDismiss: () -> Unit) {
                         color = NewsBiasColors.TextPrimary
                     )
                     Text(
-                        "• High / Very High: Outlets with rigorous primary sourcing, established fact-checking protocols, verified independent reporting standards, and minimal retractions (e.g. The Hindu, Live Law, NDTV, Reuters).",
+                        "• High: Outlets with rigorous primary sourcing, established fact-checking protocols, verified independent reporting standards, and minimal retractions (e.g. The Hindu, Indian Express, Hindustan Times, Times of India, NDTV).",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF93C5FD),
                         lineHeight = 18.sp
                     )
                     Text(
-                        "• Standard: Established commercial news publishers and regional broadsheets providing mainstream coverage with standard wire and agency reporting (e.g. Times of India, Hindustan Times, Times of Israel).",
+                        "• Standard: Regional news publications, digital portals, and syndication desks providing mainstream coverage with standard wire and agency reporting.",
                         style = MaterialTheme.typography.bodySmall,
                         color = NewsBiasColors.TextSecondary,
                         lineHeight = 18.sp
                     )
                     Text(
-                        "• Mixed: Outlets with pronounced ideological stance, commentary-heavy formats, or history of selective reporting where opinion-driven framing strongly influences coverage (e.g. Organiser, The Wire, OpIndia).",
+                        "• Mixed: Outlets with pronounced ideological stances, commentary-heavy formats, or history of selective reporting where opinion-driven framing strongly influences coverage (e.g. OpIndia, Swarajya, Organiser, National Herald).",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFFFDA4AF),
                         lineHeight = 18.sp
