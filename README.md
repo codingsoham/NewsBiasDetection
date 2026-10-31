@@ -1,10 +1,13 @@
-# NewsBias: AI-Powered Multi-Perspective News Analysis & Bias Detection for India 🇮🇳
+<div align="center">
+  <img src="docs/screenshots/app_icon.png" width="100" height="100" alt="NewsBias Icon" />
+  <h1>NewsBias</h1>
+  <p><strong>AI-Powered Multi-Perspective News Analysis & Bias Detection for India 🇮🇳</strong></p>
 
-[![Model on HuggingFace](https://img.shields.io/badge/🤗%20Hugging%20Face-Model%20Weights-ffd21e.svg)](https://huggingface.co/codingsoham/newsbias-indic-roberta)
-[![AWS Cloud](https://img.shields.io/badge/AWS-EC2%20Sydney%20(24%2F7)-FF9900?logo=amazon-aws&logoColor=white)](http://54.206.165.74:8000/health/model)
-[![Android](https://img.shields.io/badge/Android-Jetpack%20Compose-3DDC84?logo=android&logoColor=white)](https://github.com/codingsoham/NewsBiasDetection/releases)
-[![Python 3.12](https://img.shields.io/badge/Backend-FastAPI%20%7C%20PyTorch-009688.svg)](backend/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+  [![Download APK](https://img.shields.io/badge/Download%20APK-v1.0.0%20Production-success?logo=android&style=for-the-badge)](https://github.com/codingsoham/NewsBiasDetection/releases/download/v1.0.0/NewsBias-v1.0.0.apk)
+  [![Model on HuggingFace](https://img.shields.io/badge/🤗%20Hugging%20Face-Model%20Weights-ffd21e.svg)](https://huggingface.co/codingsoham/newsbias-indic-roberta)
+  [![AWS Cloud](https://img.shields.io/badge/AWS-EC2%20Sydney%20(24%2F7)-FF9900?logo=amazon-aws&logoColor=white)](http://54.206.165.74:8000/health/model)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+</div>
 
 A full-stack, production-ready news bias transparency platform inspired by **Ground News**, built specifically for Indian socio-political journalism. 
 
