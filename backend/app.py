@@ -47,6 +47,7 @@ app = FastAPI(title='News Bias Detection API', version='0.1-experimental', lifes
 
 
 def con():
+    DB.parent.mkdir(parents=True, exist_ok=True)
     c = sqlite3.connect(DB, timeout=30.0)
     c.row_factory = sqlite3.Row
     c.execute("PRAGMA journal_mode=WAL;")
@@ -60,28 +61,52 @@ def public(r):
 
 def ensure(c):
     c.executescript('''
-        create table if not exists predictions(
-            article_id integer primary key,
-            p_left real,
-            p_center real,
-            p_right real,
-            low_confidence integer not null,
-            model_path text,
-            created_at text default current_timestamp
+        CREATE TABLE IF NOT EXISTS articles (
+            id INTEGER PRIMARY KEY,
+            source TEXT NOT NULL,
+            url TEXT NOT NULL UNIQUE,
+            normalized_url TEXT NOT NULL UNIQUE,
+            title TEXT NOT NULL,
+            snippet TEXT,
+            text TEXT,
+            content_hash TEXT,
+            published_at TEXT,
+            fetched_at TEXT NOT NULL
         );
-        create table if not exists stories(
-            id integer primary key,
-            title text,
-            created_at text default current_timestamp
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_articles_content_hash ON articles(content_hash) WHERE content_hash IS NOT NULL;
+        CREATE INDEX IF NOT EXISTS idx_articles_source ON articles(source);
+        CREATE TABLE IF NOT EXISTS collection_runs (
+            id INTEGER PRIMARY KEY,
+            started_at TEXT NOT NULL,
+            completed_at TEXT,
+            backfill INTEGER NOT NULL,
+            feed_url TEXT NOT NULL,
+            articles_discovered INTEGER NOT NULL,
+            articles_stored INTEGER NOT NULL,
+            error TEXT
         );
-        create table if not exists story_articles(
-            story_id integer,
-            article_id integer unique,
-            primary key(story_id, article_id)
+        CREATE TABLE IF NOT EXISTS predictions(
+            article_id INTEGER PRIMARY KEY,
+            p_left REAL,
+            p_center REAL,
+            p_right REAL,
+            low_confidence INTEGER NOT NULL,
+            model_path TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
-        create table if not exists app_meta(
-            key text primary key,
-            value text
+        CREATE TABLE IF NOT EXISTS stories(
+            id INTEGER PRIMARY KEY,
+            title TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS story_articles(
+            story_id INTEGER,
+            article_id INTEGER UNIQUE,
+            PRIMARY KEY(story_id, article_id)
+        );
+        CREATE TABLE IF NOT EXISTS app_meta(
+            key TEXT PRIMARY KEY,
+            value TEXT
         );
     ''')
     c.commit()

@@ -302,6 +302,7 @@ def refresh_realtime_news(
     """
     close_when_done = False
     if c is None:
+        DB.parent.mkdir(parents=True, exist_ok=True)
         c = sqlite3.connect(DB, timeout=30.0)
         c.row_factory = sqlite3.Row
         c.execute("PRAGMA journal_mode=WAL;")
