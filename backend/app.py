@@ -93,11 +93,33 @@ class PredictBody(BaseModel):
 
 
 @lru_cache(maxsize=1)
+def _get_temperature() -> float:
+    local_temp = Path(__file__).resolve().parents[1] / 'models' / 'best' / 'temperature.json'
+    if local_temp.exists():
+        try:
+            return float(json.loads(local_temp.read_text()).get('temperature', 1.0))
+        except Exception:
+            return 1.0
+    try:
+        from huggingface_hub import hf_hub_download
+        hf_repo = os.getenv("HF_MODEL_REPO", "codingsoham/newsbias-indic-roberta")
+        file_path = hf_hub_download(repo_id=hf_repo, filename="temperature.json")
+        return float(json.loads(Path(file_path).read_text()).get('temperature', 1.0))
+    except Exception:
+        return 1.0
+
+
+@lru_cache(maxsize=1)
 def _model():
     # Lazy-load avoids GPU allocation until prediction is actually requested.
     import torch
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
-    path = Path(__file__).resolve().parents[1] / 'models' / 'best' / 'best'
+    local_path = Path(__file__).resolve().parents[1] / 'models' / 'best' / 'best'
+    hf_repo = os.getenv("HF_MODEL_REPO", "codingsoham/newsbias-indic-roberta")
+    if local_path.exists() and (local_path / "model.safetensors").exists():
+        path = str(local_path)
+    else:
+        path = hf_repo
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     tok = AutoTokenizer.from_pretrained(path)
     model = AutoModelForSequenceClassification.from_pretrained(path).to(dev).eval()
@@ -107,6 +129,7 @@ def _model():
 def reload_model():
     """Clear model cache so new checkpoints are loaded fresh."""
     _model.cache_clear()
+    _get_temperature.cache_clear()
 
 
 def predict_text(text: str, source: str | None = None) -> dict[str, float]:
@@ -124,7 +147,7 @@ def predict_text(text: str, source: str | None = None) -> dict[str, float]:
     x = {k: v.to(dev) for k, v in x.items()}
     with torch.no_grad():
         logits = m(**x).logits
-    t = json.loads((Path(__file__).resolve().parents[1] / 'models' / 'best' / 'temperature.json').read_text()).get('temperature', 1.0)
+    t = _get_temperature()
     p = torch.softmax(logits / t, 1)[0].tolist()
     # Option 1: 100% content-based NLP evaluation from RoBERTa model.
     raw_pred = dict(zip(('LEFT', 'CENTER', 'RIGHT', 'NOT_POLITICAL'), p))
@@ -149,7 +172,7 @@ def predict_batch(
     clean_texts = [clean_text_for_inference(t) for t in texts]
     tok, m = _model()
     dev = next(m.parameters()).device
-    t = json.loads((Path(__file__).resolve().parents[1] / 'models' / 'best' / 'temperature.json').read_text()).get('temperature', 1.0)
+    t = _get_temperature()
 
     results = []
     with torch.no_grad():
