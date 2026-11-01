@@ -16,10 +16,15 @@ data class FeedState(
 
 @HiltViewModel
 class FeedViewModel @Inject constructor(
-    private val repository: NewsRepository
+    private val repository: NewsRepository,
+    private val appUpdater: AppUpdater
 ) : ViewModel() {
     private val loading = MutableStateFlow(false)
     private val error = MutableStateFlow<String?>(null)
+
+    val updateInfo = MutableStateFlow<AppUpdateInfo?>(null)
+    val downloadState = MutableStateFlow<DownloadState>(DownloadState.Idle)
+    val updateCheckMessage = MutableStateFlow<String?>(null)
 
     val state: StateFlow<FeedState> = combine(
         repository.stories(),
@@ -34,6 +39,9 @@ class FeedViewModel @Inject constructor(
     )
 
     init {
+        // Automatically check for GitHub releases on app open
+        checkForUpdates(isManual = false)
+
         // App launch: do NOT trigger pull-to-refresh spinner.
         // Cached stories from Room render instantly (0ms delay).
         // Only trigger an initial background fetch if Room is completely empty (first run).
@@ -48,6 +56,45 @@ class FeedViewModel @Inject constructor(
                 loading.value = false
             }
         }
+    }
+
+    fun checkForUpdates(isManual: Boolean = false) {
+        viewModelScope.launch {
+            val info = appUpdater.checkForUpdate()
+            if (info != null) {
+                updateInfo.value = info
+            } else if (isManual) {
+                updateCheckMessage.value = "You are on the latest version (v${com.codingsoham.newsbias.BuildConfig.VERSION_NAME})."
+            }
+        }
+    }
+
+    fun startDownload(info: AppUpdateInfo) {
+        viewModelScope.launch {
+            downloadState.value = DownloadState.Downloading(0f, 0L, info.apkSize)
+            runCatching {
+                val file = appUpdater.downloadApk(info.apkUrl, info.versionName) { progress, downloaded, total ->
+                    downloadState.value = DownloadState.Downloading(progress, downloaded, total)
+                }
+                downloadState.value = DownloadState.ReadyToInstall(file)
+                appUpdater.installApk(file)
+            }.onFailure {
+                downloadState.value = DownloadState.Error(it.message ?: "Failed to download update.")
+            }
+        }
+    }
+
+    fun installDownloaded(file: java.io.File) {
+        appUpdater.installApk(file)
+    }
+
+    fun dismissUpdate() {
+        updateInfo.value = null
+        downloadState.value = DownloadState.Idle
+    }
+
+    fun dismissCheckMessage() {
+        updateCheckMessage.value = null
     }
 
     // Manual pull-to-refresh: triggered only when user physically pulls down

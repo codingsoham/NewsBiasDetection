@@ -17,7 +17,7 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
         val apiUrl = (project.findProperty("apiBaseUrl") as String?) ?: "http://54.206.165.74:8000/"
         buildConfigField("String", "API_BASE_URL", "\"${apiUrl.trimEnd('/')}/\"")
     }

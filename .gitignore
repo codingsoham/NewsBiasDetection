@@ -56,9 +56,9 @@ MANIFEST
 # ------------------------------------------------------------------------------
 # Machine Learning Weights & Large Binaries (Hosted on Hugging Face Hub)
 # ------------------------------------------------------------------------------
-data/
-models/
-results/
+/data/
+/models/
+/results/
 *.pt
 *.pth
 *.bin

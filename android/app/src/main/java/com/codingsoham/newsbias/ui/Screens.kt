@@ -45,8 +45,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.codingsoham.newsbias.BuildConfig
+import com.codingsoham.newsbias.data.AppUpdateInfo
 import com.codingsoham.newsbias.data.CachedArticle
 import com.codingsoham.newsbias.data.CachedStory
+import com.codingsoham.newsbias.data.DownloadState
+import java.io.File
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -56,6 +60,10 @@ private const val UNCLEAR_THRESHOLD = 0.45f
 @Composable
 fun FeedScreen(onStory: (Long) -> Unit, viewModel: FeedViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
+    val updateInfo by viewModel.updateInfo.collectAsState()
+    val downloadState by viewModel.downloadState.collectAsState()
+    val checkMessage by viewModel.updateCheckMessage.collectAsState()
+
     var showInfo by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf("All") }
     val listState = rememberLazyListState()
@@ -323,7 +331,23 @@ fun FeedScreen(onStory: (Long) -> Unit, viewModel: FeedViewModel = hiltViewModel
             }
         }
     }
-    if (showInfo) InfoSheet { showInfo = false }
+    if (showInfo) {
+        InfoSheet(
+            onDismiss = { showInfo = false },
+            onCheckUpdate = { viewModel.checkForUpdates(isManual = true) },
+            checkMessage = checkMessage
+        )
+    }
+
+    updateInfo?.let { info ->
+        UpdateBottomSheet(
+            info = info,
+            downloadState = downloadState,
+            onStartDownload = { viewModel.startDownload(info) },
+            onInstall = { viewModel.installDownloaded(it) },
+            onDismiss = { viewModel.dismissUpdate() }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -574,7 +598,7 @@ fun DetailScreen(id: Long, onBack: () -> Unit, viewModel: DetailViewModel = hilt
             }
         }
     }
-    if (showInfo) InfoSheet { showInfo = false }
+    if (showInfo) InfoSheet(onDismiss = { showInfo = false })
 }
 
 @Composable
@@ -1036,7 +1060,11 @@ private fun ErrorCard(message: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun InfoSheet(onDismiss: () -> Unit) {
+private fun InfoSheet(
+    onDismiss: () -> Unit,
+    onCheckUpdate: (() -> Unit)? = null,
+    checkMessage: String? = null
+) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -1134,6 +1162,59 @@ private fun InfoSheet(onDismiss: () -> Unit) {
                 }
             }
 
+            // 3. App Version & GitHub Releases Updater
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = NewsBiasColors.SurfaceElevated,
+                border = androidx.compose.foundation.BorderStroke(1.dp, NewsBiasColors.BorderSubtle),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                "App Version",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = NewsBiasColors.TextPrimary
+                            )
+                            Text(
+                                "v${BuildConfig.VERSION_NAME} (Production)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = NewsBiasColors.TextSecondary
+                            )
+                        }
+                        if (onCheckUpdate != null) {
+                            OutlinedButton(
+                                onClick = onCheckUpdate,
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, NewsBiasColors.BorderStrong),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    "Check Update 🔄",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = NewsBiasColors.BrandAccent
+                                )
+                            }
+                        }
+                    }
+                    if (!checkMessage.isNullOrBlank()) {
+                        Text(
+                            checkMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = NewsBiasColors.CenterColor,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
             Button(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
@@ -1141,6 +1222,185 @@ private fun InfoSheet(onDismiss: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = NewsBiasColors.BrandAccent)
             ) {
                 Text("Understood", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UpdateBottomSheet(
+    info: AppUpdateInfo,
+    downloadState: DownloadState,
+    onStartDownload: () -> Unit,
+    onInstall: (File) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = {
+            if (downloadState !is DownloadState.Downloading) {
+                onDismiss()
+            }
+        },
+        sheetState = sheetState,
+        containerColor = NewsBiasColors.SurfaceCard,
+        contentColor = NewsBiasColors.TextPrimary,
+        tonalElevation = 8.dp
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 28.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(NewsBiasColors.BrandAccent.copy(alpha = 0.2f), shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("🚀", fontSize = 22.sp)
+                }
+                Column {
+                    Text(
+                        "New Update Available",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = NewsBiasColors.TextPrimary
+                    )
+                    Text(
+                        "${info.versionName} • ${(info.apkSize / (1024 * 1024.0)).let { "%.1f MB".format(it) }}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NewsBiasColors.CenterColor,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            // Release Notes Box
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = NewsBiasColors.SurfaceElevated,
+                border = androidx.compose.foundation.BorderStroke(1.dp, NewsBiasColors.BorderSubtle),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        "What's New in ${info.versionName}:",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = NewsBiasColors.TextPrimary
+                    )
+                    Text(
+                        info.releaseNotes.trim(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NewsBiasColors.TextSecondary,
+                        lineHeight = 18.sp,
+                        maxLines = 10,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            // Download State / Action
+            when (downloadState) {
+                is DownloadState.Idle -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, NewsBiasColors.BorderStrong)
+                        ) {
+                            Text("Later", color = NewsBiasColors.TextSecondary)
+                        }
+                        Button(
+                            onClick = onStartDownload,
+                            modifier = Modifier.weight(2f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = NewsBiasColors.BrandAccent)
+                        ) {
+                            Text("Update Now 📥", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                is DownloadState.Downloading -> {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Downloading APK update...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = NewsBiasColors.TextSecondary
+                            )
+                            Text(
+                                "${(downloadState.progress * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = NewsBiasColors.BrandAccent
+                            )
+                        }
+                        LinearProgressIndicator(
+                            progress = { downloadState.progress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            color = NewsBiasColors.BrandAccent,
+                            trackColor = NewsBiasColors.SurfaceElevated
+                        )
+                        Text(
+                            "${(downloadState.downloadedBytes / (1024 * 1024.0)).let { "%.1f MB".format(it) }} / ${(downloadState.totalBytes / (1024 * 1024.0)).let { "%.1f MB".format(it) }}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = NewsBiasColors.TextTertiary,
+                            modifier = Modifier.align(Alignment.End)
+                        )
+                    }
+                }
+                is DownloadState.ReadyToInstall -> {
+                    Button(
+                        onClick = { onInstall(downloadState.file) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = NewsBiasColors.CenterColor)
+                    ) {
+                        Text("Install Update 📲", fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    }
+                }
+                is DownloadState.Error -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "Download error: ${downloadState.message}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = NewsBiasColors.RightColor
+                        )
+                        Button(
+                            onClick = onStartDownload,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = NewsBiasColors.BrandAccent)
+                        ) {
+                            Text("Retry Download 🔄", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
     }
