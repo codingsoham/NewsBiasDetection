@@ -94,23 +94,24 @@ class DetailViewModel @Inject constructor(
     )
 
     fun load(storyId: Long) {
-        if (id.value == storyId) return
         id.value = storyId
         error.value = null
 
-        // Render cached articles from Room immediately with loading = false.
-        // Only fetch from network if this story has no cached articles yet.
+        // Render cached articles from Room immediately (0ms latency).
+        // Concurrently fetch authoritative story detail from network to ensure exact content alignment.
         viewModelScope.launch {
             val count = repository.getArticleCount(storyId)
             if (count == 0) {
                 loading.value = true
-                runCatching {
-                    repository.refreshStory(storyId)
-                }.onFailure {
+            }
+            runCatching {
+                repository.refreshStory(storyId)
+            }.onFailure {
+                if (repository.getArticleCount(storyId) == 0) {
                     error.value = "Offline mode. No cached articles for this story yet."
                 }
-                loading.value = false
             }
+            loading.value = false
         }
     }
 

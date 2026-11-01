@@ -21,8 +21,8 @@ import javax.inject.Singleton
 object AppModule {
     @Provides @Singleton fun moshi(): Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     @Provides @Singleton fun okHttpClient(): OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(45, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
         .build()
     @Provides @Singleton fun api(moshi: Moshi, client: OkHttpClient): NewsApi = Retrofit.Builder()
         .baseUrl(BuildConfig.API_BASE_URL)

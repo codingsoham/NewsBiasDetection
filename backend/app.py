@@ -296,7 +296,7 @@ def stories(limit: int = 100, auto_refresh: bool = False, force: bool = False):
             from backend.ingest import refresh_realtime_news
         except ImportError:
             from ingest import refresh_realtime_news
-        refresh_realtime_news(c, force=force, throttle_seconds=15)
+        refresh_realtime_news(c, force=force, throttle_seconds=30)
 
     rows = c.execute('''
         select s.id, s.title, count(sa.article_id) sources,
@@ -332,7 +332,7 @@ def stories(limit: int = 100, auto_refresh: bool = False, force: bool = False):
 
 
 @app.get('/stories/bundle')
-def stories_bundle(limit: int = 50, force: bool = False):
+def stories_bundle(limit: int = 100, force: bool = False):
     """Atomic multi-story bundle with clustered articles for instant offline Room caching."""
     c = con()
     ensure(c)
@@ -342,7 +342,7 @@ def stories_bundle(limit: int = 50, force: bool = False):
             from backend.ingest import refresh_realtime_news
         except ImportError:
             from ingest import refresh_realtime_news
-        refresh_realtime_news(c, force=True, throttle_seconds=15)
+        refresh_realtime_news(c, force=True, throttle_seconds=30)
 
     story_rows = c.execute('''
         select s.id, s.title, count(sa.article_id) sources,
@@ -354,7 +354,7 @@ def stories_bundle(limit: int = 50, force: bool = False):
         group by s.id
         order by max(a.fetched_at) desc, max(sa.article_id) desc
         limit ?
-    ''', (min(max(limit, 1), 50),)).fetchall()
+    ''', (min(max(limit, 1), 100),)).fetchall()
 
     try:
         from backend.indian_filter import classify_indian_news

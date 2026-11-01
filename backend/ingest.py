@@ -280,10 +280,13 @@ def cluster_stories(c: sqlite3.Connection, threshold: float = 0.68, min_keyword_
     total_stories = 0
     total_links = 0
     for g in target_groups:
-        cur = c.execute("INSERT INTO stories (title) VALUES (?)", (g['rows'][0]['title'],))
-        story_id = cur.lastrowid
+        # Deterministic canonical story ID tied to earliest constituent article ID
+        # Prevents ID shifting and cross-contamination across reclustering cycles
+        canonical_id = min(r['id'] for r in g['rows'])
+        c.execute("INSERT OR REPLACE INTO stories (id, title) VALUES (?, ?)", (canonical_id, g['rows'][0]['title']))
+        story_id = canonical_id
         links = [(story_id, r['id']) for r in g['rows']]
-        c.executemany("INSERT OR IGNORE INTO story_articles (story_id, article_id) VALUES (?, ?)", links)
+        c.executemany("INSERT OR REPLACE INTO story_articles (story_id, article_id) VALUES (?, ?)", links)
         total_stories += 1
         total_links += len(links)
 
